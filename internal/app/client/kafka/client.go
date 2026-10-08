@@ -1,0 +1,1 @@
+package app_client_kafka
