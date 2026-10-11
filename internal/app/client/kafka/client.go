@@ -34,14 +34,17 @@ func NewKafkaClient(config Config) (KafkaClient, error) {
 
 type RegisterEventService func(ctx context.Context, events app_domain.RegisterEvent) error
 
-func (kc *KafkaClient) ListenAuthEvents(ctx context.Context, eventService RegisterEventService) {
+func (kc *KafkaClient) ListenAuthEvents(ctx context.Context, eventService RegisterEventService) error {
+	var errs []kgo.FetchError
+
 	for ctx.Err() == nil {
 		fetches := kc.cl.PollFetches(ctx)
-		if errs := fetches.Errors(); len(errs) > 0 {
-			panic(fmt.Sprint(errs))
-		}
 
-		eventsData := make([]app_domain.RegisterEvent, 0, 5)
+		errs = fetches.Errors()
+
+		if len(errs) > 0 {
+			break
+		}
 
 		iter := fetches.RecordIter()
 
@@ -53,31 +56,16 @@ func (kc *KafkaClient) ListenAuthEvents(ctx context.Context, eventService Regist
 			err := json.Unmarshal(record.Value, &event)
 
 			if err != nil {
-				eventsData = append(eventsData, app_domain.RegisterEvent{
-					Id:    event.Id,
-					Email: event.Email,
-					Error: err,
-				})
-			} else {
-				eventsData = append(eventsData, app_domain.RegisterEvent{
-					Id:    event.Id,
-					Email: event.Email,
-					Error: nil,
-				})
-			}
-		}
-
-		for _, event := range eventsData {
-			if event.Error != nil {
 				log.Printf("failed to parse event: %v", event.Error)
-				continue
-			}
+			} else {
+				err = eventService(ctx, event)
 
-			err := eventService(ctx, event)
-
-			if err != nil {
-				log.Printf("failed to notify: %v", err)
+				if err != nil {
+					log.Printf("failed to notify: %v", err)
+				}
 			}
 		}
 	}
+
+	return fmt.Errorf("Failed to fetches event: %w", fmt.Sprint(errs))
 }

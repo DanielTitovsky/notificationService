@@ -3,24 +3,24 @@ package app_repository_postgres
 import "time"
 
 type Config struct {
-	User            string        `env: User`
-	Password        string        `env: Password`
-	Host            string        `env: Host`
-	Port            string        `env: Port`
-	DataBase        string        `env: DataBase`
-	MaxConns        int           `env: MaxConns`
-	MinConns        int           `env: MinConns`
-	MaxConnLifeTime time.Duration `env: MaxConnLifeTime`
-	MaxConnIdleTime time.Duration `env: MaxConnIdleTime`
+	User            string
+	Password        string
+	Host            string
+	Port            string
+	DataBase        string
+	MaxConns        int
+	MinConns        int
+	MaxConnLifeTime time.Duration
+	MaxConnIdleTime time.Duration
 }
 
 func NewConfig() Config {
 	return Config{
-		User:            "articles_user",
-		Password:        "articles_password",
+		User:            "postgres",
+		Password:        "root",
 		Host:            "localhost",
-		Port:            "5433",
-		DataBase:        "articles_db",
+		Port:            "5434",
+		DataBase:        "postgres",
 		MaxConns:        25,
 		MinConns:        5,
 		MaxConnLifeTime: 5 * time.Minute,

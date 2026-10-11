@@ -58,4 +58,6 @@ func (s *ServerMux) Run(ctx context.Context) error {
 
 		fmt.Println("shutdown completed successfully")
 	}
+
+	return nil
 }
