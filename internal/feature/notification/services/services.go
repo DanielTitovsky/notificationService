@@ -3,7 +3,7 @@ package notification_services
 import (
 	"context"
 
-	app_domain "github.com/DanielTitovsky/notificationService/internal/app/domain"
+	usecases "github.com/DanielTitovsky/notificationService/internal/app/useCases"
 )
 
 type NotificationService struct {
@@ -11,7 +11,7 @@ type NotificationService struct {
 }
 
 type NotificationRepository interface {
-	SaveRegisterdEvent(ctx context.Context, event app_domain.RegisterEvent) error
+	SaveRegisterdEvent(ctx context.Context, event usecases.EventsRepository) error
 }
 
 func NewNotificationService(repository NotificationRepository) NotificationService {

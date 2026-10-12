@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os/signal"
 	"sync"
@@ -35,7 +36,7 @@ func main() {
 
 	//Регитрация KAFKA CLIENT
 	kafkaConfig := app_client_kafka.NewConfig(
-		":9092",
+		"localhost:9092",
 		"auth_registered",
 		"AuthUser",
 	)
@@ -56,6 +57,8 @@ func main() {
 
 	wg.Add(2)
 
+	fmt.Print("1")
+
 	go func() {
 		defer wg.Done()
 		errCh <- kafkaClient.ListenAuthEvents(ctx, notificationService.RegisterEventService)
@@ -63,10 +66,14 @@ func main() {
 
 	router.RegisterRouter(notificationHandler.Register()...)
 
+	fmt.Print("2")
+
 	go func() {
 		defer wg.Done()
 		errCh <- httpServer.Run(ctx)
 	}()
+
+	fmt.Print("3")
 
 	select {
 	case err := <-errCh:
@@ -78,3 +85,8 @@ func main() {
 
 	wg.Wait()
 }
+
+// Написать SMTP-обёртку и проверить отправку одного письма на собственный адрес.
+// Подключить её к сервису и отправить одну задачу из БД.
+// Добавить фоновый цикл, который периодически проверяет ожидающие задачи.
+// Добавить ограниченные повторные попытки и окончательный статус ошибки.

@@ -56,7 +56,7 @@ func (kc *KafkaClient) ListenAuthEvents(ctx context.Context, eventService Regist
 			err := json.Unmarshal(record.Value, &event)
 
 			if err != nil {
-				log.Printf("failed to parse event: %v", event.Error)
+				log.Printf("failed to parse event: %v", err)
 			} else {
 				err = eventService(ctx, event)
 
