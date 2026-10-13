@@ -12,6 +12,8 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.30 // indirect
 	github.com/twmb/franz-go v1.22.1 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.14.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/text v0.29.0 // indirect
+	github.com/wneessen/go-mail v0.8.1 // indirect
+	golang.org/x/crypto v0.54.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 )

@@ -9,8 +9,10 @@ import (
 	"syscall"
 
 	app_client_kafka "github.com/DanielTitovsky/notificationService/internal/app/client/kafka"
+	app_client_smtp "github.com/DanielTitovsky/notificationService/internal/app/client/smtp"
 	app_repository_postgres "github.com/DanielTitovsky/notificationService/internal/app/repository/postgres"
 	app_transport_http_server "github.com/DanielTitovsky/notificationService/internal/app/transport/http/server"
+	usecases "github.com/DanielTitovsky/notificationService/internal/app/useCases"
 	notification_postgres "github.com/DanielTitovsky/notificationService/internal/feature/notification/repository/postgres"
 	notification_services "github.com/DanielTitovsky/notificationService/internal/feature/notification/services"
 	notification_transport "github.com/DanielTitovsky/notificationService/internal/feature/notification/transport"
@@ -46,9 +48,26 @@ func main() {
 		log.Fatal("Failed to create kafka client: %w", err)
 	}
 
+	//Регистрация SMTP Client
+	SMTPConfig := app_client_smtp.NewConfig()
+	SMTPClient, err := app_client_smtp.NewSMTPClient(SMTPConfig)
+
+	if err != nil {
+		log.Fatal("Failed to create SMTP client: %w", err)
+	}
+
+	err = SMTPClient.SendMessage(ctx, "daniil.titovsk@gmail.com", usecases.Message{
+		Subject: "lalalal",
+		Body:    "lolollolololol",
+	})
+
+	if err != nil {
+		fmt.Print("Failed to create SMTP client: %w", err)
+	}
+
 	//Notification
 	notificationRepository := notification_postgres.NewNotificationRepository(pgPool.Pool)
-	notificationService := notification_services.NewNotificationService(&notificationRepository)
+	notificationService := notification_services.NewNotificationService(&notificationRepository, &SMTPClient)
 	notificationHandler := notification_transport.NewNotificationHandler(&notificationService)
 
 	errCh := make(chan error, 2)
