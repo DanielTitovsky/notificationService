@@ -12,7 +12,6 @@ import (
 	app_client_smtp "github.com/DanielTitovsky/notificationService/internal/app/client/smtp"
 	app_repository_postgres "github.com/DanielTitovsky/notificationService/internal/app/repository/postgres"
 	app_transport_http_server "github.com/DanielTitovsky/notificationService/internal/app/transport/http/server"
-	usecases "github.com/DanielTitovsky/notificationService/internal/app/useCases"
 	notification_postgres "github.com/DanielTitovsky/notificationService/internal/feature/notification/repository/postgres"
 	notification_services "github.com/DanielTitovsky/notificationService/internal/feature/notification/services"
 	notification_transport "github.com/DanielTitovsky/notificationService/internal/feature/notification/transport"
@@ -56,15 +55,6 @@ func main() {
 		log.Fatal("Failed to create SMTP client: %w", err)
 	}
 
-	err = SMTPClient.SendMessage(ctx, "daniil.titovsk@gmail.com", usecases.Message{
-		Subject: "lalalal",
-		Body:    "lolollolololol",
-	})
-
-	if err != nil {
-		fmt.Print("Failed to create SMTP client: %w", err)
-	}
-
 	//Notification
 	notificationRepository := notification_postgres.NewNotificationRepository(pgPool.Pool)
 	notificationService := notification_services.NewNotificationService(&notificationRepository, &SMTPClient)
@@ -105,7 +95,24 @@ func main() {
 	wg.Wait()
 }
 
-// Написать SMTP-обёртку и проверить отправку одного письма на собственный адрес.
-// Подключить её к сервису и отправить одну задачу из БД.
-// Добавить фоновый цикл, который периодически проверяет ожидающие задачи.
-// Добавить ограниченные повторные попытки и окончательный статус ошибки.
+//Продолжить с написания репозитория
+
+// Забирать задачи из БД. Метод репозитория выбирает ограниченную порцию pending-событий и
+// атомарно переводит их в processing, возвращая выбранные записи. Так два обработчика не заберут
+//  одну задачу. Транзакция заканчивается до обращения к SMTP.
+
+// Обрабатывать сохранённое событие. По полю type сервис определяет нужное действие,
+//  извлекает данные из payload и формирует usecases.Message. Например, для регистрации
+//  берёт email и готовит приветственное письмо.
+
+// Отправлять порцию через ограниченный пул. SendPendingMessages распределяет задачи
+//  между несколькими воркерами и ждёт их завершения. После успешной SMTP-отправки сохраняет sent.
+
+// Запускать обработку периодически. Фоновый цикл вызывает SendPendingMessages раз
+//  в N секунд. Следующий вызов начинается после завершения предыдущего; при отмене
+// контекста цикл останавливается.
+
+// Определить поведение при сбоях. Временную ошибку SMTP нужно повторять
+//  с задержкой, окончательную — переводить в failed. Ещё потребуется возвращать
+// в обработку зависшие processing-задачи после падения приложения. Для этого одного
+//  status недостаточно: понадобятся данные о попытках и времени начала обработки.

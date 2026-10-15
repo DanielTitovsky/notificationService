@@ -16,3 +16,8 @@ type EventsRepository struct {
 	Payload json.RawMessage
 	Status  string
 }
+
+type SendRegEventService struct {
+	Email   string
+	Payload []byte
+}
